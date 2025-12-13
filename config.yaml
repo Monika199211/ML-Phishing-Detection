@@ -1,5 +1,5 @@
 data:
-  file_path: "/Users/monikabadadhe/Documents/AI_Projects/phishing-website-detection-mm/data/phising.csv
+  file_path: "/Users/monikabadadhe/Documents/AI_Projects/phishing-website-detection-mm/data/phising.csv"
   target_column: "Result"
   test_size: 0.2
   random_state: 42
