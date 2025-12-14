@@ -119,19 +119,51 @@ This will:
 - Save trained models to `artifacts/`
 - Display performance metrics
 
-### 3. Start Web Application
+### 3. Start Applications
+
+#### Option A: Traditional ML Web Application
 ```bash
-# Start FastAPI server
+# Start the ML-based web application
 uvicorn api.main:app --reload
 
 # Or with custom host/port
 uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 4. Access the Application
+#### Option B: MLflow UI for Experiment Tracking
+```bash
+# Start MLflow UI to view experiment tracking
+mlflow ui
+
+# Or with custom host/port
+mlflow ui --host 0.0.0.0 --port 5000
+
+# Access at: http://localhost:5000
+```
+
+### 4. Access the Applications
+
+#### ML Web Application
 - **Web UI**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
+
+#### MLflow Dashboard
+- **Experiment Tracking**: http://localhost:5000
+- **Model Registry**: View model versions and metrics
+- **Compare Runs**: Analyze different training experiments
+
+### 5. Complete Workflow Commands
+```bash
+# 1. Train models with MLflow tracking
+python run_pipeline.py
+
+# 2. Start MLflow UI (in new terminal)
+mlflow ui
+
+# 3. Start main application (in new terminal)
+uvicorn api.main:app --reload
+```
 
 ## 📊 Usage Examples
 
@@ -201,15 +233,50 @@ mlp:
 **Data Flow:**
 1. Raw data → `data_loader.py`
 2. Preprocessing → `preprocessor.py` 
-3. Model training → `train_*.py`
+3. Model training → `train_*.py` (with MLflow tracking)
 4. Inference → `predictor.py`
 5. Web interface → `api/main.py`
 
+### MLflow Integration
+
+**Experiment Tracking:**
+- All model training runs are automatically logged to MLflow
+- Experiment name: "PhishGuard_AI"
+- Tracks metrics, parameters, and model artifacts
+
+**MLflow Commands:**
+```bash
+# View experiment tracking UI
+mlflow ui
+
+# View specific experiment
+mlflow ui --backend-store-uri ./mlruns
+
+# Compare model runs
+mlflow ui --host 0.0.0.0 --port 5000
+```
+
+**What's Tracked:**
+- Model hyperparameters
+- Training/validation metrics
+- Model artifacts (.pkl files)
+- Dataset information
+- Training duration
+
 ### Adding New Models
 1. Create training script in `src/train_newmodel.py`
-2. Update `config.yaml` with model parameters
-3. Add model loading in `inference/predictor.py`
-4. Update API endpoints if needed
+2. Add MLflow tracking to your training function:
+   ```python
+   import mlflow
+   
+   with mlflow.start_run():
+       mlflow.log_params(params)
+       mlflow.log_metric("accuracy", accuracy)
+       mlflow.sklearn.log_model(model, "model")
+   ```
+3. Update `config.yaml` with model parameters
+4. Add model loading in `inference/predictor.py`
+5. Update API endpoints if needed
 
 ## 📈 Model Performance
 
@@ -219,7 +286,42 @@ The trained models achieve high accuracy in detecting phishing websites:
 - Cross-validation and stratified sampling
 - Real-time prediction capabilities
 
-## 🛠️ Troubleshooting
+## � Quick Reference Commands
+
+### Essential Commands
+```bash
+# Complete setup and run
+source env/bin/activate                    # Activate environment
+python run_pipeline.py                     # Train models
+uvicorn api.main:app --reload             # Start main app
+mlflow ui                                  # Start MLflow UI (new terminal)
+```
+
+### Development Commands
+```bash
+# Testing
+python inference/predictor.py             # Test prediction engine
+python src/config_loader.py              # Test configuration
+python src/data_loader.py                # Test data loading
+
+# Applications
+uvicorn api.main:app --reload             # ML web application (port 8000)
+mlflow ui --port 5000                     # MLflow UI (port 5000)
+
+# API Testing
+curl -X POST "http://localhost:8000/predict_json" -H "Content-Type: application/json" -d '{"model_type":"xgboost","features":{"having_IP_Address":"no"}}'
+```
+
+### Multiple Services (Run in separate terminals)
+```bash
+# Terminal 1: MLflow UI
+mlflow ui
+
+# Terminal 2: Main Application
+uvicorn api.main:app --reload
+```
+
+## �🛠️ Troubleshooting
 
 ### Common Issues
 
