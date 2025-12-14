@@ -19,3 +19,4 @@ mlflow
 beautifulsoup4
 dnspython
 python-whois
+python-whois

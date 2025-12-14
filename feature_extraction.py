@@ -179,6 +179,18 @@ class FeatureExtractor:
             "Abnormal_URL": self.abnormal_url(domain, html),
             "Iframe": self.iframe_present(html),
 
+            # Additional features required by the model (set to -1 for unknown/not extractable)
+            "Favicon": -1,  # Difficult to determine reliably in real-time
+            "port": 0,      # Most legitimate sites use standard ports
+            "HTTPS_token": 1 if (parsed.hostname and 'https' in parsed.hostname.lower()) else 0,
+            "URL_of_Anchor": -1,    # Requires complex HTML analysis
+            "Links_in_tags": -1,    # Requires complex HTML analysis
+            "SFH": -1,              # Server Form Handler - complex to determine
+            "Redirect": -1,         # Would need to follow redirects
+            "on_mouseover": -1,     # JavaScript behavior analysis
+            "RightClick": -1,       # JavaScript behavior analysis
+            "popUpWidnow": -1,      # JavaScript behavior analysis
+
             # Not reliable in real-time → unknown
             "web_traffic": -1,
             "Page_Rank": -1,
