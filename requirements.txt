@@ -12,3 +12,7 @@ requests
 matplotlib
 seaborn
 scipy
+groq
+python-dotenv
+tldextract
+mlflow
