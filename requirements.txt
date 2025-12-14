@@ -16,3 +16,6 @@ groq
 python-dotenv
 tldextract
 mlflow
+beautifulsoup4
+dnspython
+python-whois
