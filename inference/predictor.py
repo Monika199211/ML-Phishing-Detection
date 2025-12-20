@@ -190,21 +190,13 @@ if __name__ == "__main__":
 
     extractor = FeatureExtractor()
 
-    # Test with a suspicious URL
     url = "https://secure-paypal-login-verification.xyz/login"
-    print(f"Testing URL: {url}")
+
     features = extractor.extract(url)
+
     result = predict(features, model_type="xgboost")
-    print("Suspicious URL Result:", result)
-    
-    print("\n" + "="*60 + "\n")
-    
-    # Test with a legitimate URL
-    url_legit = "https://www.paypal.com"
-    print(f"Testing URL: {url_legit}")
-    features_legit = extractor.extract(url_legit)
-    result_legit = predict(features_legit, model_type="xgboost")
-    print("Legitimate URL Result:", result_legit)
+
+    print(result)
 
 
     # print("\n--- XGBoost Prediction ---")

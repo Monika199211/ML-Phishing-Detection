@@ -33,6 +33,8 @@ phishing-website-detection-mm/
 ├── config.yaml              # Configuration settings
 ├── requirements.txt         # Python dependencies
 ├── run_pipeline.py          # Pipeline execution script
+├── Dockerfile               # Docker container configuration
+├── docker-compose.yml       # Multi-service Docker setup
 └── main.py                  # Entry point
 ```
 
@@ -90,8 +92,15 @@ The model analyzes 30 different website characteristics:
 - Python 3.12+
 - Virtual environment support
 - Homebrew (macOS) for OpenMP
+- Docker (optional, for containerized deployment)
 
-### 1. Environment Setup
+### 📋 Deployment Options
+
+Choose between local development setup or containerized deployment:
+
+#### 🖥️ **Option 1: Local Development Setup**
+
+##### 1. Environment Setup
 ```bash
 # Clone the repository
 git clone https://github.com/Monika199211/phishing-website-detection-mm.git
@@ -107,62 +116,118 @@ uv pip install -r requirements.txt
 brew install libomp
 ```
 
-### 2. Train Models
+##### 2. Train Models
 ```bash
 # Run the complete ML pipeline
 python run_pipeline.py
 ```
 
-This will:
-- Load and preprocess the dataset
-- Train XGBoost and ANN models
-- Save trained models to `artifacts/`
-- Display performance metrics
-
-### 3. Start Applications
-
-#### Option A: Traditional ML Web Application
+##### 3. Start Applications (Local)
 ```bash
-# Start the ML-based web application
+# Option A: ML Web Application
 uvicorn api.main:app --reload
 
-# Or with custom host/port
-uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-#### Option B: MLflow UI for Experiment Tracking
-```bash
-# Start MLflow UI to view experiment tracking
+# Option B: MLflow UI (in new terminal)
 mlflow ui
 
-# Or with custom host/port
-mlflow ui --host 0.0.0.0 --port 5000
-
-# Access at: http://localhost:5000
-```
-
-### 4. Access the Applications
-
-#### ML Web Application
-- **Web UI**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-
-#### MLflow Dashboard
-- **Experiment Tracking**: http://localhost:5000
-- **Model Registry**: View model versions and metrics
-- **Compare Runs**: Analyze different training experiments
-
-### 5. Complete Workflow Commands
-```bash
-# 1. Train models with MLflow tracking
-python run_pipeline.py
-
-# 2. Start MLflow UI (in new terminal)
+# Option C: Both services
+# Terminal 1: MLflow UI
 mlflow ui
 
-# 3. Start main application (in new terminal)
+# Terminal 2: Main Application  
 uvicorn api.main:app --reload
+```
+
+#### 🐳 **Option 2: Docker Deployment**
+
+##### 1. Build Docker Image
+```bash
+# Build the Docker image
+docker build -t phishguard-ai .
+
+# Or build with specific tag
+docker build -t phishguard-ai:latest .
+```
+
+##### 2. Run with Docker Compose (Recommended)
+```bash
+# Start all services (app + mlflow)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+##### 3. Run Individual Docker Containers
+```bash
+# Run main application only
+docker run -d \
+  --name phishguard-app \
+  -p 8000:8000 \
+  -v $(pwd)/artifacts:/app/artifacts \
+  phishguard-ai
+
+# Run MLflow UI only
+docker run -d \
+  --name mlflow-ui \
+  -p 5000:5000 \
+  -v $(pwd)/mlruns:/app/mlruns \
+  phishguard-ai \
+  mlflow ui --host 0.0.0.0 --port 5000
+
+# Run training pipeline in container
+docker run --rm \
+  -v $(pwd)/artifacts:/app/artifacts \
+  -v $(pwd)/mlruns:/app/mlruns \
+  phishguard-ai \
+  python run_pipeline.py
+```
+
+##### 4. Docker Management Commands
+```bash
+# View running containers
+docker ps
+
+# Stop containers
+docker stop phishguard-app mlflow-ui
+
+# Remove containers
+docker rm phishguard-app mlflow-ui
+
+# Remove image
+docker rmi phishguard-ai
+
+# View container logs
+docker logs phishguard-app
+```
+
+### 🌐 Access Applications
+
+#### Both Local and Docker Deployments
+- **ML Web Application**: http://localhost:8000
+  - **Interactive UI**: Feature-based phishing detection
+  - **API Documentation**: http://localhost:8000/docs
+  - **ReDoc**: http://localhost:8000/redoc
+
+- **MLflow Dashboard**: http://localhost:5000
+  - **Experiment Tracking**: View training runs and metrics
+  - **Model Registry**: Compare model versions
+  - **Artifacts**: Download trained models
+
+#### Quick Health Check
+```bash
+# Test application endpoints
+curl http://localhost:8000/                    # Web UI
+curl http://localhost:8000/docs               # API docs
+curl http://localhost:5000/                   # MLflow UI
+
+# Test prediction API
+curl -X POST "http://localhost:8000/predict_json" \
+     -H "Content-Type: application/json" \
+     -d '{"model_type":"xgboost","features":{"having_IP_Address":"no","SSLfinal_State":"yes"}}'
 ```
 
 ## 📊 Usage Examples
@@ -286,18 +351,20 @@ The trained models achieve high accuracy in detecting phishing websites:
 - Cross-validation and stratified sampling
 - Real-time prediction capabilities
 
-## � Quick Reference Commands
+## 🚀 Quick Reference Commands
 
-### Essential Commands
+### 🖥️ Local Development Commands
+
+#### Essential Setup
 ```bash
-# Complete setup and run
+# Complete local setup and run
 source env/bin/activate                    # Activate environment
 python run_pipeline.py                     # Train models
 uvicorn api.main:app --reload             # Start main app
 mlflow ui                                  # Start MLflow UI (new terminal)
 ```
 
-### Development Commands
+#### Development & Testing
 ```bash
 # Testing
 python inference/predictor.py             # Test prediction engine
@@ -312,7 +379,7 @@ mlflow ui --port 5000                     # MLflow UI (port 5000)
 curl -X POST "http://localhost:8000/predict_json" -H "Content-Type: application/json" -d '{"model_type":"xgboost","features":{"having_IP_Address":"no"}}'
 ```
 
-### Multiple Services (Run in separate terminals)
+#### Multiple Services (Local - Run in separate terminals)
 ```bash
 # Terminal 1: MLflow UI
 mlflow ui
@@ -321,9 +388,59 @@ mlflow ui
 uvicorn api.main:app --reload
 ```
 
-## �🛠️ Troubleshooting
+### 🐳 Docker Commands
+
+#### Quick Docker Setup
+```bash
+# Build and run everything
+docker-compose up -d                      # Start all services
+docker-compose logs -f                    # View logs
+docker-compose down                       # Stop all services
+```
+
+#### Individual Docker Operations
+```bash
+# Build image
+docker build -t phishguard-ai .
+
+# Run training
+docker run --rm -v $(pwd)/artifacts:/app/artifacts phishguard-ai python run_pipeline.py
+
+# Run web app
+docker run -d -p 8000:8000 --name phishguard-app phishguard-ai
+
+# Run MLflow UI
+docker run -d -p 5000:5000 --name mlflow-ui -v $(pwd)/mlruns:/app/mlruns phishguard-ai mlflow ui --host 0.0.0.0
+
+# Management
+docker ps                                 # View running containers
+docker stop phishguard-app mlflow-ui      # Stop containers
+docker logs phishguard-app               # View logs
+```
+
+#### Docker Compose Services
+```bash
+# Start specific service
+docker-compose up phishguard-app         # Start only web application
+docker-compose up mlflow-ui              # Start only MLflow UI
+
+# Restart services
+docker-compose restart                   # Restart all services
+docker-compose restart phishguard-app    # Restart specific service
+
+# View service logs
+docker-compose logs phishguard-app       # App logs
+docker-compose logs mlflow-ui            # MLflow logs
+
+# Scale services
+docker-compose up --scale phishguard-app=2  # Run multiple app instances
+```
+
+## 🛠️ Troubleshooting
 
 ### Common Issues
+
+#### Local Development Issues
 
 **XGBoost Import Error (macOS):**
 ```bash
@@ -342,6 +459,49 @@ uv pip install -r requirements.txt
 ```bash
 # Retrain models
 python run_pipeline.py
+```
+
+#### Docker Issues
+
+**Docker Build Fails:**
+```bash
+# Clear Docker cache and rebuild
+docker system prune -f
+docker build --no-cache -t phishguard-ai .
+```
+
+**Port Already in Use:**
+```bash
+# Find and kill process using the port
+lsof -ti:8000 | xargs kill -9  # For port 8000
+lsof -ti:5000 | xargs kill -9  # For port 5000
+
+# Or use different ports
+docker run -p 8001:8000 phishguard-ai
+```
+
+**Volume Mount Issues:**
+```bash
+# Ensure directories exist
+mkdir -p artifacts mlruns
+
+# Fix permissions (Linux/macOS)
+chmod -R 755 artifacts mlruns
+
+# Use absolute paths
+docker run -v /full/path/to/artifacts:/app/artifacts phishguard-ai
+```
+
+**Container Won't Start:**
+```bash
+# Check container logs
+docker logs phishguard-app
+
+# Run interactively for debugging
+docker run -it phishguard-ai /bin/bash
+
+# Check container health
+docker inspect phishguard-app
 ```
 
 ## 📝 License
